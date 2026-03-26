@@ -22,7 +22,9 @@
     ],
     "security": {
       "csp": null
-    },
+    }
+  },
+  "plugins": {
     "updater": {
       "active": true,
       "dialog": true,
