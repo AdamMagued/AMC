@@ -1,6 +1,7 @@
 // ── AMC main.js ──
 
-const SIGNALING_URL = 'https://spending-prospect-amazing-fundamental.trycloudflare.com';
+// Fetch signaling URL from GitHub config — update config.json on GitHub when URL changes, no rebuild needed
+const CONFIG_URL = 'https://raw.githubusercontent.com/AdamMagued/AMC/main/config.json';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -11,6 +12,7 @@ const ICE_SERVERS = {
 };
 
 // ── STATE ──
+let SIGNALING_URL = '';
 let myUsername = '';
 let myTag = '';
 let currentRoom = null;
@@ -162,8 +164,18 @@ function runIntro(onDone) {
   showNext();
 }
 
-// ── ONBOARDING ──
-function init() {
+// ── INIT — fetch config first ──
+async function init() {
+  // Fetch signaling URL from GitHub config
+  try {
+    const res = await fetch(CONFIG_URL);
+    const config = await res.json();
+    SIGNALING_URL = config.signalUrl;
+  } catch(e) {
+    // fallback — will show error when trying to connect
+    SIGNALING_URL = '';
+  }
+
   loadData();
   if (myUsername) { goHome(); return; }
   showScreen('screen-intro');
@@ -303,6 +315,11 @@ $('btn-copy-code').addEventListener('click', () => {
 function connectSocket(roomCode) {
   members = [{ name: myUsername }];
   renderMembers();
+
+  if (!SIGNALING_URL) {
+    addSystemMessage('Could not load server config. Check your internet connection.');
+    return;
+  }
 
   if (typeof io === 'undefined') {
     addSystemMessage('Could not connect to server. Check your connection.');
@@ -561,5 +578,5 @@ function toggleCam() {
   if (t) { t.enabled = !t.enabled; $('btn-cam-toggle').textContent = t.enabled ? 'Cam off' : 'Cam on'; }
 }
 
-// ── INIT ──
+// ── START ──
 init();
